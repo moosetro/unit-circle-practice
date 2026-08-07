@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unit Circle Practice</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --text: #16181d;
+    --muted: #667085;
+    --line: #dfe3e8;
+    --line-strong: #c8ced6;
+    --accent: #243b53;
+    --accent-soft: #eef2f6;
+    --good: #237a57;
+    --good-bg: #eef8f3;
+    --bad: #a53b35;
+    --bad-bg: #fcf1f0;
+    --focus: #2e5f87;
+    --shadow: 0 8px 26px rgba(17, 24, 39, 0.07);
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  button, input, select {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  .app-shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+  }
+
+  .sidebar {
+    background: #202934;
+    color: #fff;
+    padding: 28px 22px;
+    min-height: 100vh;
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+
+  .brand {
+    margin-bottom: 30px;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-size: 1.18rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .brand p {
+    color: #bbc4cf;
+    margin: 7px 0 0;
+    font-size: .9rem;
+    line-height: 1.45;
+  }
+
+  .settings-group {
+    border-top: 1px solid rgba(255,255,255,.12);
+    padding-top: 20px;
+    margin-top: 20px;
+  }
+
+  .settings-group h2 {
+    font-size: .76rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9facba;
+    margin: 0 0 12px;
+    font-weight: 700;
+  }
+
+  .choice-stack {
+    display: grid;
+    gap: 8px;
+  }
+
+  .choice {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 10px;
+    border-radius: 10px;
+    color: #e9eef3;
+    font-size: .92rem;
+    line-height: 1.35;
+  }
+
+  .choice:hover {
+    background: rgba(255,255,255,.05);
+  }
+
+  .choice input {
+    margin-top: 2px;
+    accent-color: #d7e3ef;
+  }
+
+  .main {
+    padding: 30px;
+    min-width: 0;
+  }
+
+  .topbar {
+    max-width: 1160px;
+    margin: 0 auto 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .topbar .title h2 {
+    margin: 0;
+    font-size: 1.65rem;
+    letter-spacing: -0.035em;
+  }
+
+  .topbar .title p {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: .94rem;
+  }
+
+  .score-strip {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .score-chip {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: .88rem;
+    white-space: nowrap;
+  }
+
+  .score-chip strong {
+    color: var(--text);
+  }
+
+  .workspace {
+    max-width: 1160px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(430px, 1.05fr) minmax(370px, .95fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+
+  .circle-card {
+    padding: 22px;
+    min-height: 660px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .problem-card {
+    padding: 26px;
+    min-height: 660px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-kicker {
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .problem-prompt {
+    font-size: clamp(2.1rem, 4vw, 3.25rem);
+    letter-spacing: -0.04em;
+    font-weight: 700;
+    line-height: 1.05;
+    margin: 4px 0 10px;
+  }
+
+  .problem-sub {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: .96rem;
+  }
+
+  .circle-wrap {
+    flex: 1;
+    min-height: 520px;
+    display: grid;
+    place-items: center;
+    margin-top: 8px;
+  }
+
+  svg {
+    width: min(100%, 560px);
+    height: auto;
+    overflow: visible;
+  }
+
+  .axis { stroke: #7b8794; stroke-width: 1.25; }
+  .unit-circle { fill: none; stroke: #273444; stroke-width: 2; }
+  .radius-line { stroke: #b6bec8; stroke-width: 1; }
+  .highlight-line { stroke: #2e5f87; stroke-width: 2.2; }
+  .point { fill: #273444; }
+  .point.highlight { fill: #2e5f87; }
+  .angle-label { font-size: 12px; fill: #4d5966; font-family: inherit; }
+  .angle-label.highlight { fill: #163d5b; font-weight: 700; }
+  .tick-label { font-size: 11px; fill: #7b8794; }
+
+  .response-area {
+    margin-top: 28px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mode-panel {
+    display: none;
+  }
+
+  .mode-panel.active {
+    display: block;
+  }
+
+  .match-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .answer-button {
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 12px;
+    min-height: 58px;
+    font-size: 1.2rem;
+    color: var(--text);
+    transition: border-color .12s ease, background-color .12s ease, transform .12s ease;
+  }
+
+  .answer-button:hover {
+    border-color: #95a3b1;
+    background: #fafbfc;
+  }
+
+  .answer-button:active {
+    transform: translateY(1px);
+  }
+
+  .builder {
+    margin-top: 18px;
+  }
+
+  .drop-zone {
+    min-height: 82px;
+    border: 1.5px dashed #aeb8c3;
+    border-radius: 14px;
+    padding: 14px;
+    background: #fafbfc;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    transition: border-color .12s ease, background-color .12s ease;
+  }
+
+  .drop-zone.drag-over {
+    border-color: var(--focus);
+    background: #f3f7fa;
+  }
+
+  .drop-placeholder {
+    color: #8b97a5;
+    font-size: .92rem;
+  }
+
+  .piece-bank {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .piece {
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    border-radius: 10px;
+    padding: 9px 12px;
+    min-width: 42px;
+    text-align: center;
+    font-weight: 650;
+    font-size: 1rem;
+    user-select: none;
+  }
+
+  .piece[draggable="true"] {
+    cursor: grab;
+  }
+
+  .piece.placed {
+    background: var(--accent-soft);
+  }
+
+  .type-wrap {
+    margin-top: 20px;
+  }
+
+  .type-input {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 15px 16px;
+    font-size: 1.15rem;
+    outline: none;
+    background: #fff;
+  }
+
+  .type-input:focus {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px rgba(46,95,135,.10);
+  }
+
+  .type-help {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: .86rem;
+    line-height: 1.45;
+  }
+
+  .footer-actions {
+    margin-top: auto;
+    padding-top: 24px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    color: var(--text);
+    border-radius: 11px;
+    padding: 10px 15px;
+    font-weight: 650;
+  }
+
+  .btn:hover {
+    background: #f7f8fa;
+  }
+
+  .btn.primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .btn.primary:hover {
+    background: #1d3145;
+  }
+
+  .feedback {
+    display: none;
+    margin-top: 18px;
+    border-radius: 12px;
+    padding: 13px 14px;
+    line-height: 1.45;
+    font-size: .94rem;
+  }
+
+  .feedback.show { display: block; }
+  .feedback.good {
+    background: var(--good-bg);
+    color: #185d43;
+    border: 1px solid #cfe7db;
+  }
+  .feedback.bad {
+    background: var(--bad-bg);
+    color: #84312d;
+    border: 1px solid #efd4d1;
+  }
+
+  .small {
+    font-size: .82rem;
+    color: var(--muted);
+  }
+
+  .session-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    margin-top: 4px;
+    font-size: .9rem;
+    color: #dfe6ed;
+  }
+
+  .reset-link {
+    background: none;
+    border: 0;
+    color: #cbd6e1;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .no-circle-note {
+    color: var(--muted);
+    font-size: .92rem;
+    text-align: center;
+    padding: 30px;
+  }
+
+  .kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--line-strong);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: #fff;
+    font-size: .8em;
+    color: #4d5966;
+  }
+
+  @media (max-width: 980px) {
+    .app-shell { grid-template-columns: 1fr; }
+    .sidebar {
+      min-height: auto;
+      position: static;
+      padding: 22px;
+    }
+    .settings-layout {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .settings-group {
+      margin-top: 0;
+    }
+    .workspace {
+      grid-template-columns: 1fr;
+    }
+    .circle-card, .problem-card {
+      min-height: auto;
+    }
+    .circle-wrap {
+      min-height: 440px;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .main { padding: 18px 12px 28px; }
+    .topbar {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+    .settings-layout {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .settings-group {
+      margin-top: 18px;
+    }
+    .match-grid {
+      grid-template-columns: 1fr;
+    }
+    .circle-wrap {
+      min-height: 360px;
+    }
+    .problem-card, .circle-card { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>Unit Circle Practice</h1>
+      <p>Exact trig values from standard angles.</p>
+    </div>
+
+    <div class="settings-layout">
+      <section class="settings-group">
+        <h2>Reference</h2>
+        <div class="choice-stack">
+          <label class="choice"><input type="radio" name="circleMode" value="full" checked> Show full unit circle</label>
+          <label class="choice"><input type="radio" name="circleMode" value="quadrant"> Show first quadrant only</label>
+          <label class="choice"><input type="radio" name="circleMode" value="none"> Hide unit circle</label>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h2>Functions</h2>
+        <div class="choice-stack">
+          <label class="choice"><input type="radio" name="functionMode" value="sc" checked> Sine and cosine</label>
+          <label class="choice"><input type="radio" name="functionMode" value="sct"> Add tangent</label>
+          <label class="choice"><input type="radio" name="functionMode" value="all"> Add reciprocal functions</label>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h2>Angle format</h2>
+        <div class="choice-stack">
+          <label class="choice"><input type="radio" name="angleMode" value="radians" checked> Radians</label>
+          <label class="choice"><input type="radio" name="angleMode" value="degrees"> Degrees</label>
+          <label class="choice"><input type="radio" name="angleMode" value="mixed"> Mixed</label>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <h2>Response</h2>
+        <div class="choice-stack">
+          <label class="choice"><input type="radio" name="responseMode" value="match" checked> Matching</label>
+          <label class="choice"><input type="radio" name="responseMode" value="build"> Build the answer</label>
+          <label class="choice"><input type="radio" name="responseMode" value="type"> Type the answer</label>
+        </div>
+      </section>
+    </div>
+
+    <section class="settings-group">
+      <h2>Session</h2>
+      <div class="session-row"><span>Correct</span><strong id="sideCorrect">0</strong></div>
+      <div class="session-row"><span>Attempted</span><strong id="sideAttempted">0</strong></div>
+      <div class="session-row"><span>Streak</span><strong id="sideStreak">0</strong></div>
+      <div style="margin-top:14px"><button id="resetStats" class="reset-link">Reset session stats</button></div>
+    </section>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="title">
+        <h2>Evaluate the trig ratio</h2>
+        <p>Give the exact value. Rationalized and unrationalized equivalent forms are accepted when typing.</p>
+      </div>
+      <div class="score-strip">
+        <div class="score-chip"><strong id="topCorrect">0</strong> correct</div>
+        <div class="score-chip"><strong id="topAttempted">0</strong> attempted</div>
+        <div class="score-chip"><strong id="topAccuracy">—</strong> accuracy</div>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <section class="card circle-card">
+        <div class="card-kicker">Reference</div>
+        <div id="circleWrap" class="circle-wrap"></div>
+      </section>
+
+      <section class="card problem-card">
+        <div class="card-kicker">Problem</div>
+        <div id="problemPrompt" class="problem-prompt">sin(π/6)</div>
+        <p id="problemSub" class="problem-sub">Choose the exact value.</p>
+
+        <div class="response-area">
+          <div id="matchPanel" class="mode-panel active">
+            <div id="matchGrid" class="match-grid"></div>
+          </div>
+
+          <div id="buildPanel" class="mode-panel">
+            <div class="builder">
+              <div id="dropZone" class="drop-zone" aria-label="Answer construction area">
+                <span class="drop-placeholder">Drag pieces here, or click pieces below.</span>
+              </div>
+              <div id="pieceBank" class="piece-bank"></div>
+              <div class="small" style="margin-top:10px;">Click a placed piece to remove it. Build the expression from left to right.</div>
+            </div>
+          </div>
+
+          <div id="typePanel" class="mode-panel">
+            <div class="type-wrap">
+              <input id="typeInput" class="type-input" autocomplete="off" spellcheck="false" placeholder="Example: -sqrt(3)/2" />
+              <div class="type-help">
+                Use <span class="kbd">sqrt</span> for radicals and <span class="kbd">/</span> for fractions.
+                Enter <strong>undefined</strong> when the ratio does not exist.
+              </div>
+            </div>
+          </div>
+
+          <div id="feedback" class="feedback"></div>
+
+          <div class="footer-actions">
+            <button id="checkBtn" class="btn primary">Check answer</button>
+            <button id="nextBtn" class="btn">New problem</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const PI = Math.PI;
+  const angles = [
+    {deg:0,   rad:"0",       x:"1",          y:"0"},
+    {deg:30,  rad:"π/6",     x:"sqrt(3)/2",  y:"1/2"},
+    {deg:45,  rad:"π/4",     x:"sqrt(2)/2",  y:"sqrt(2)/2"},
+    {deg:60,  rad:"π/3",     x:"1/2",        y:"sqrt(3)/2"},
+    {deg:90,  rad:"π/2",     x:"0",          y:"1"},
+    {deg:120, rad:"2π/3",    x:"-1/2",       y:"sqrt(3)/2"},
+    {deg:135, rad:"3π/4",    x:"-sqrt(2)/2", y:"sqrt(2)/2"},
+    {deg:150, rad:"5π/6",    x:"-sqrt(3)/2", y:"1/2"},
+    {deg:180, rad:"π",       x:"-1",         y:"0"},
+    {deg:210, rad:"7π/6",    x:"-sqrt(3)/2", y:"-1/2"},
+    {deg:225, rad:"5π/4",    x:"-sqrt(2)/2", y:"-sqrt(2)/2"},
+    {deg:240, rad:"4π/3",    x:"-1/2",       y:"-sqrt(3)/2"},
+    {deg:270, rad:"3π/2",    x:"0",          y:"-1"},
+    {deg:300, rad:"5π/3",    x:"1/2",        y:"-sqrt(3)/2"},
+    {deg:315, rad:"7π/4",    x:"sqrt(2)/2",  y:"-sqrt(2)/2"},
+    {deg:330, rad:"11π/6",   x:"sqrt(3)/2",  y:"-1/2"}
+  ];
+
+  const functionsByMode = {
+    sc: ["sin","cos"],
+    sct: ["sin","cos","tan"],
+    all: ["sin","cos","tan","csc","sec","cot"]
+  };
+
+  const displayNames = {
+    sin: "sin", cos: "cos", tan: "tan",
+    csc: "csc", sec: "sec", cot: "cot"
+  };
+
+  let current = null;
+  let selectedMatch = null;
+  let buildTokens = [];
+  let stats = {correct:0, attempted:0, streak:0};
+  let answered = false;
+
+  const $ = sel => document.querySelector(sel);
+  const $$ = sel => [...document.querySelectorAll(sel)];
+
+  function selected(name) {
+    return document.querySelector(`input[name="${name}"]:checked`).value;
+  }
+
+  function normalizeExpr(s) {
+    return String(s)
+      .toLowerCase()
+      .replace(/\s+/g,"")
+      .replace(/√/g,"sqrt")
+      .replace(/\u2212/g,"-")
+      .replace(/\*/g,"")
+      .replace(/\(([^()]*)\)/g,"($1)");
+  }
+
+  function numericEval(expr) {
+    expr = normalizeExpr(expr);
+    if (expr === "undefined" || expr === "dne") return NaN;
+    if (!/^[0-9sqrt()+\-/.]+$/.test(expr)) return NaN;
+    let js = expr.replace(/sqrt/g, "Math.sqrt");
+    try {
+      const value = Function('"use strict"; return (' + js + ')')();
+      return Number.isFinite(value) ? value : NaN;
+    } catch {
+      return NaN;
+    }
+  }
+
+  function divideExpr(a,b) {
+    const av = numericEval(a), bv = numericEval(b);
+    if (!Number.isFinite(bv) || Math.abs(bv) < 1e-12) return "undefined";
+    const val = av / bv;
+    return canonicalFromNumeric(val);
+  }
+
+  const canonicalValues = [
+    ["-sqrt(3)", -Math.sqrt(3)],
+    ["-sqrt(2)", -Math.sqrt(2)],
+    ["-1", -1],
+    ["-sqrt(3)/2", -Math.sqrt(3)/2],
+    ["-sqrt(2)/2", -Math.sqrt(2)/2],
+    ["-sqrt(3)/3", -Math.sqrt(3)/3],
+    ["-1/2", -0.5],
+    ["0", 0],
+    ["1/2", 0.5],
+    ["sqrt(3)/3", Math.sqrt(3)/3],
+    ["sqrt(2)/2", Math.sqrt(2)/2],
+    ["sqrt(3)/2", Math.sqrt(3)/2],
+    ["1", 1],
+    ["sqrt(2)", Math.sqrt(2)],
+    ["sqrt(3)", Math.sqrt(3)],
+    ["2", 2],
+    ["-2", -2],
+    ["2*sqrt(3)/3", 2*Math.sqrt(3)/3],
+    ["-2*sqrt(3)/3", -2*Math.sqrt(3)/3]
+  ];
+
+  function canonicalFromNumeric(v) {
+    for (const [expr,val] of canonicalValues) {
+      if (Math.abs(v-val) < 1e-10) return expr;
+    }
+    return String(v);
+  }
+
+  function exactValue(fn, angle) {
+    const x = angle.x, y = angle.y;
+    if (fn === "sin") return y;
+    if (fn === "cos") return x;
+    if (fn === "tan") return divideExpr(y,x);
+    if (fn === "csc") return divideExpr("1",y);
+    if (fn === "sec") return divideExpr("1",x);
+    if (fn === "cot") return divideExpr(x,y);
+  }
+
+  function equivalentAnswer(user, correct) {
+    const u = normalizeExpr(user);
+    const c = normalizeExpr(correct);
+    if (c === "undefined") return ["undefined","dne","doesnotexist"].includes(u);
+    if (u === c) return true;
+
+    // Accepted exact-form variants.
+    const substitutions = {
+      "1/sqrt(3)": "sqrt(3)/3",
+      "-1/sqrt(3)": "-sqrt(3)/3",
+      "2/sqrt(3)": "2*sqrt(3)/3",
+      "-2/sqrt(3)": "-2*sqrt(3)/3",
+      "sqrt(3)/sqrt(3)": "1"
+    };
+    const u2 = substitutions[u] || u;
+    if (u2 === c) return true;
+
+    const uv = numericEval(u2);
+    const cv = numericEval(c);
+    return Number.isFinite(uv) && Number.isFinite(cv) && Math.abs(uv-cv) < 1e-10;
+  }
+
+  function randomItem(arr) {
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function newProblem() {
+    answered = false;
+    selectedMatch = null;
+    buildTokens = [];
+    $("#typeInput").value = "";
+    hideFeedback();
+
+    const circleMode = selected("circleMode");
+    const fnMode = selected("functionMode");
+    const angleMode = selected("angleMode");
+    const fn = randomItem(functionsByMode[fnMode]);
+
+    let pool = angles;
+    if (circleMode === "quadrant") pool = angles.filter(a => a.deg >= 0 && a.deg <= 90);
+
+    const angle = randomItem(pool);
+    let shownAngle;
+    if (angleMode === "degrees") {
+      shownAngle = `${angle.deg}°`;
+    } else if (angleMode === "mixed") {
+      shownAngle = Math.random() < 0.5 ? angle.rad : `${angle.deg}°`;
+    } else {
+      shownAngle = angle.rad;
+    }
+
+    current = {
+      fn,
+      angle,
+      shownAngle,
+      answer: exactValue(fn, angle)
+    };
+
+    $("#problemPrompt").textContent = `${displayNames[fn]}(${shownAngle})`;
+    renderCircle();
+    renderResponseMode();
+  }
+
+  function renderResponseMode() {
+    const mode = selected("responseMode");
+    $$(".mode-panel").forEach(p => p.classList.remove("active"));
+    $(`#${mode}Panel`).classList.add("active");
+
+    if (mode === "match") {
+      $("#problemSub").textContent = "Choose the exact value.";
+      renderMatching();
+      $("#checkBtn").style.display = "none";
+    } else if (mode === "build") {
+      $("#problemSub").textContent = "Build the exact value from the available pieces.";
+      renderBuilder();
+      $("#checkBtn").style.display = "";
+    } else {
+      $("#problemSub").textContent = "Type the exact value.";
+      $("#checkBtn").style.display = "";
+      setTimeout(() => $("#typeInput").focus(), 0);
+    }
+  }
+
+  function renderMatching() {
+    const correct = current.answer;
+    const candidates = [
+      "-2","-sqrt(3)","-sqrt(2)","-1","-sqrt(3)/2","-sqrt(2)/2",
+      "-sqrt(3)/3","-1/2","0","1/2","sqrt(3)/3","sqrt(2)/2",
+      "sqrt(3)/2","1","sqrt(2)","sqrt(3)","2","2*sqrt(3)/3",
+      "undefined"
+    ];
+
+    let wrong = candidates.filter(v => !equivalentAnswer(v, correct));
+    wrong.sort(() => Math.random() - .5);
+    const opts = [correct, ...wrong.slice(0,3)].sort(() => Math.random() - .5);
+
+    const grid = $("#matchGrid");
+    grid.innerHTML = "";
+    opts.forEach(opt => {
+      const b = document.createElement("button");
+      b.className = "answer-button";
+      b.textContent = pretty(opt);
+      b.addEventListener("click", () => {
+        if (answered) return;
+        selectedMatch = opt;
+        checkAnswer();
+      });
+      grid.appendChild(b);
+    });
+  }
+
+  function pretty(expr) {
+    return expr
+      .replace(/\*/g,"")
+      .replace(/sqrt\(3\)/g,"√3")
+      .replace(/sqrt\(2\)/g,"√2");
+  }
+
+  function renderBuilder() {
+    const bank = $("#pieceBank");
+    bank.innerHTML = "";
+    renderDropZone();
+
+    const pieces = ["−","1","2","3","√2","√3","/","undefined"];
+    pieces.forEach((label, i) => {
+      const p = document.createElement("button");
+      p.className = "piece";
+      p.textContent = label;
+      p.draggable = true;
+      p.dataset.value = label;
+      p.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", label);
+      });
+      p.addEventListener("click", () => addToken(label));
+      bank.appendChild(p);
+    });
+
+    const dz = $("#dropZone");
+    dz.ondragover = e => { e.preventDefault(); dz.classList.add("drag-over"); };
+    dz.ondragleave = () => dz.classList.remove("drag-over");
+    dz.ondrop = e => {
+      e.preventDefault();
+      dz.classList.remove("drag-over");
+      addToken(e.dataTransfer.getData("text/plain"));
+    };
+  }
+
+  function addToken(label) {
+    if (answered) return;
+    buildTokens.push(label);
+    renderDropZone();
+  }
+
+  function renderDropZone() {
+    const dz = $("#dropZone");
+    dz.innerHTML = "";
+    if (!buildTokens.length) {
+      const ph = document.createElement("span");
+      ph.className = "drop-placeholder";
+      ph.textContent = "Drag pieces here, or click pieces below.";
+      dz.appendChild(ph);
+      return;
+    }
+    buildTokens.forEach((token, idx) => {
+      const p = document.createElement("button");
+      p.className = "piece placed";
+      p.textContent = token;
+      p.title = "Remove";
+      p.addEventListener("click", () => {
+        if (answered) return;
+        buildTokens.splice(idx,1);
+        renderDropZone();
+      });
+      dz.appendChild(p);
+    });
+  }
+
+  function builderExpression() {
+    let s = buildTokens.join("");
+    s = s.replace(/−/g,"-").replace(/√2/g,"sqrt(2)").replace(/√3/g,"sqrt(3)");
+    return s;
+  }
+
+  function getUserAnswer() {
+    const mode = selected("responseMode");
+    if (mode === "match") return selectedMatch;
+    if (mode === "build") return builderExpression();
+    return $("#typeInput").value;
+  }
+
+  function checkAnswer() {
+    if (answered) return;
+    const userAnswer = getUserAnswer();
+    if (!userAnswer) {
+      showFeedback(false, "Enter or build an answer first.");
+      return;
+    }
+
+    const ok = equivalentAnswer(userAnswer, current.answer);
+    answered = true;
+    stats.attempted++;
+    if (ok) {
+      stats.correct++;
+      stats.streak++;
+      showFeedback(true, `Correct. ${pretty(current.answer)} is the exact value.`);
+    } else {
+      stats.streak = 0;
+      showFeedback(false, `Not quite. The exact value is ${pretty(current.answer)}.`);
+    }
+    updateStats();
+  }
+
+  function showFeedback(good, text) {
+    const box = $("#feedback");
+    box.className = "feedback show " + (good ? "good" : "bad");
+    box.textContent = text;
+  }
+
+  function hideFeedback() {
+    const box = $("#feedback");
+    box.className = "feedback";
+    box.textContent = "";
+  }
+
+  function updateStats() {
+    $("#sideCorrect").textContent = stats.correct;
+    $("#sideAttempted").textContent = stats.attempted;
+    $("#sideStreak").textContent = stats.streak;
+    $("#topCorrect").textContent = stats.correct;
+    $("#topAttempted").textContent = stats.attempted;
+    $("#topAccuracy").textContent = stats.attempted ? Math.round(stats.correct/stats.attempted*100) + "%" : "—";
+  }
+
+  function renderCircle() {
+    const mode = selected("circleMode");
+    const wrap = $("#circleWrap");
+    if (mode === "none") {
+      wrap.innerHTML = '<div class="no-circle-note">Unit circle reference is hidden for this practice setting.</div>';
+      return;
+    }
+
+    const onlyQ1 = mode === "quadrant";
+    const W = 520, H = 520, cx = 260, cy = 260, r = 190;
+
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${onlyQ1 ? "First quadrant of the unit circle" : "Unit circle"}">`;
+
+    if (!onlyQ1) {
+      svg += `<line class="axis" x1="35" y1="${cy}" x2="485" y2="${cy}" />
+              <line class="axis" x1="${cx}" y1="35" x2="${cx}" y2="485" />
+              <circle class="unit-circle" cx="${cx}" cy="${cy}" r="${r}" />`;
+    } else {
+      svg += `<line class="axis" x1="${cx}" y1="${cy}" x2="485" y2="${cy}" />
+              <line class="axis" x1="${cx}" y1="${cy}" x2="${cx}" y2="35" />
+              <path class="unit-circle" d="M ${cx+r} ${cy} A ${r} ${r} 0 0 0 ${cx} ${cy-r}" />`;
+    }
+
+    const visible = onlyQ1 ? angles.filter(a => a.deg >= 0 && a.deg <= 90) : angles;
+    visible.forEach(a => {
+      const rad = a.deg * PI / 180;
+      const x = cx + r * Math.cos(rad);
+      const y = cy - r * Math.sin(rad);
+      const hi = current && a.deg === current.angle.deg;
+
+      if (hi) {
+        svg += `<line class="highlight-line" x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" />`;
+      }
+
+      svg += `<circle class="point ${hi ? "highlight" : ""}" cx="${x}" cy="${y}" r="${hi ? 5 : 3.5}" />`;
+
+      let lx = cx + (r+30) * Math.cos(rad);
+      let ly = cy - (r+30) * Math.sin(rad);
+      let anchor = "middle";
+      if (Math.cos(rad) > .45) anchor = "start";
+      if (Math.cos(rad) < -.45) anchor = "end";
+
+      svg += `<text class="angle-label ${hi ? "highlight" : ""}" x="${lx}" y="${ly+4}" text-anchor="${anchor}">${a.rad}</text>`;
+    });
+
+    svg += `<text class="tick-label" x="${cx+r+8}" y="${cy-8}">1</text>
+            <text class="tick-label" x="${cx-12}" y="${cy-r-10}">1</text>`;
+
+    if (!onlyQ1) {
+      svg += `<text class="tick-label" x="${cx-r-18}" y="${cy-8}">−1</text>
+              <text class="tick-label" x="${cx-18}" y="${cy+r+20}">−1</text>`;
+    }
+
+    svg += `</svg>`;
+    wrap.innerHTML = svg;
+  }
+
+  // Settings listeners
+  $$('input[name="circleMode"]').forEach(el => el.addEventListener("change", newProblem));
+  $$('input[name="functionMode"]').forEach(el => el.addEventListener("change", newProblem));
+  $$('input[name="angleMode"]').forEach(el => el.addEventListener("change", newProblem));
+  $$('input[name="responseMode"]').forEach(el => el.addEventListener("change", () => {
+    answered = false;
+    selectedMatch = null;
+    buildTokens = [];
+    hideFeedback();
+    renderResponseMode();
+  }));
+
+  $("#checkBtn").addEventListener("click", checkAnswer);
+  $("#nextBtn").addEventListener("click", newProblem);
+  $("#resetStats").addEventListener("click", () => {
+    stats = {correct:0, attempted:0, streak:0};
+    updateStats();
+  });
+
+  $("#typeInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      if (answered) newProblem();
+      else checkAnswer();
+    }
+  });
+
+  updateStats();
+  newProblem();
+})();
+</script>
+</body>
+</html>
