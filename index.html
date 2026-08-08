@@ -276,6 +276,8 @@
   .point.highlight { fill: var(--orange); }
   .angle-label { font-size: 12px; fill: var(--muted); font-family: inherit; }
   .angle-label.highlight { fill: var(--orange); font-weight: 700; }
+  .degree-label { font-size: 10px; fill: var(--muted); font-family: inherit; opacity: .82; }
+  .degree-label.highlight { fill: var(--orange); font-weight: 700; opacity: 1; }
   .tick-label { font-size: 11px; fill: var(--muted); }
 
   .response-area {
@@ -647,7 +649,9 @@
       <section class="settings-group">
         <h2>Response</h2>
         <div class="choice-stack">
-          <label class="choice"><input type="radio" name="responseMode" value="match" checked> Matching</label>
+          <label class="choice"><input type="radio" name="responseMode" value="match4" checked> Matching — 4 exact options</label>
+          <label class="choice"><input type="radio" name="responseMode" value="match6"> Matching — 6 exact options</label>
+          <label class="choice"><input type="radio" name="responseMode" value="decimal"> Matching — decimals</label>
           <label class="choice"><input type="radio" name="responseMode" value="build"> Build the answer</label>
           <label class="choice"><input type="radio" name="responseMode" value="type"> Type the answer</label>
         </div>
@@ -879,6 +883,7 @@
     selectedMatch = null;
     buildTokens = [];
     $("#typeInput").value = "";
+    $("#nextBtn").textContent = "New problem";
     hideFeedback();
 
     const circleMode = selected("circleMode");
@@ -914,42 +919,101 @@
   function renderResponseMode() {
     const mode = selected("responseMode");
     $$(".mode-panel").forEach(p => p.classList.remove("active"));
-    $(`#${mode}Panel`).classList.add("active");
 
-    if (mode === "match") {
-      $("#problemSub").textContent = "Choose the exact value.";
-      renderMatching();
+    if (mode === "match4" || mode === "match6" || mode === "decimal") {
+      $("#matchPanel").classList.add("active");
+
+      if (mode === "match4") {
+        $("#problemSub").textContent = "Choose the exact value from four options.";
+        renderMatching(4);
+      } else if (mode === "match6") {
+        $("#problemSub").textContent = "Choose the exact value from six options.";
+        renderMatching(6);
+      } else {
+        $("#problemSub").textContent = "Choose the decimal approximation rounded to the nearest thousandth.";
+        renderDecimalMatching(4);
+      }
+
       $("#checkBtn").style.display = "none";
     } else if (mode === "build") {
+      $("#buildPanel").classList.add("active");
       $("#problemSub").textContent = "Build the exact value from the available pieces.";
       renderBuilder();
       $("#checkBtn").style.display = "";
     } else {
+      $("#typePanel").classList.add("active");
       $("#problemSub").textContent = "Type the exact value.";
       $("#checkBtn").style.display = "";
       setTimeout(() => $("#typeInput").focus(), 0);
     }
   }
 
-  function renderMatching() {
+  function renderMatching(optionCount = 4) {
     const correct = current.answer;
     const candidates = [
       "-2","-sqrt(3)","-sqrt(2)","-1","-sqrt(3)/2","-sqrt(2)/2",
       "-sqrt(3)/3","-1/2","0","1/2","sqrt(3)/3","sqrt(2)/2",
       "sqrt(3)/2","1","sqrt(2)","sqrt(3)","2","2*sqrt(3)/3",
-      "undefined"
+      "-2*sqrt(3)/3","undefined"
     ];
 
     let wrong = candidates.filter(v => !equivalentAnswer(v, correct));
     wrong.sort(() => Math.random() - .5);
-    const opts = [correct, ...wrong.slice(0,3)].sort(() => Math.random() - .5);
+    const opts = [correct, ...wrong.slice(0, optionCount - 1)].sort(() => Math.random() - .5);
 
+    renderMatchButtons(opts, pretty);
+  }
+
+  function decimalString(expr) {
+    if (expr === "undefined") return "undefined";
+    const value = numericEval(expr);
+    if (!Number.isFinite(value)) return "undefined";
+
+    // Round to the nearest thousandth and retain three decimal places.
+    let rounded = Math.round((value + Number.EPSILON) * 1000) / 1000;
+    if (Object.is(rounded, -0)) rounded = 0;
+    return rounded.toFixed(3);
+  }
+
+  function renderDecimalMatching(optionCount = 4) {
+    const correct = decimalString(current.answer);
+
+    if (correct === "undefined") {
+      const numericCandidates = [
+        "-2.000","-1.732","-1.414","-1.155","-1.000","-0.866",
+        "-0.707","-0.577","-0.500","0.000","0.500","0.577",
+        "0.707","0.866","1.000","1.155","1.414","1.732","2.000"
+      ];
+      const wrong = numericCandidates.sort(() => Math.random() - .5).slice(0, optionCount - 1);
+      renderMatchButtons([correct, ...wrong].sort(() => Math.random() - .5), x => x);
+      return;
+    }
+
+    const exactCandidates = [
+      "-2","-sqrt(3)","-sqrt(2)","-1","-2*sqrt(3)/3",
+      "-sqrt(3)/2","-sqrt(2)/2","-sqrt(3)/3","-1/2","0",
+      "1/2","sqrt(3)/3","sqrt(2)/2","sqrt(3)/2",
+      "2*sqrt(3)/3","1","sqrt(2)","sqrt(3)","2"
+    ];
+
+    const decimalCandidates = [...new Set(exactCandidates.map(decimalString))]
+      .filter(v => v !== correct);
+
+    decimalCandidates.sort(() => Math.random() - .5);
+    const opts = [correct, ...decimalCandidates.slice(0, optionCount - 1)]
+      .sort(() => Math.random() - .5);
+
+    renderMatchButtons(opts, x => x);
+  }
+
+  function renderMatchButtons(opts, formatter) {
     const grid = $("#matchGrid");
     grid.innerHTML = "";
+
     opts.forEach(opt => {
       const b = document.createElement("button");
       b.className = "answer-button";
-      b.textContent = pretty(opt);
+      b.textContent = formatter(opt);
       b.addEventListener("click", () => {
         if (answered) return;
         selectedMatch = opt;
@@ -1033,7 +1097,15 @@
 
   function getUserAnswer() {
     const mode = selected("responseMode");
-    if (mode === "match") return selectedMatch;
+
+    if (mode === "match4" || mode === "match6") {
+      return selectedMatch;
+    }
+
+    if (mode === "decimal") {
+      return selectedMatch;
+    }
+
     if (mode === "build") return builderExpression();
     return $("#typeInput").value;
   }
@@ -1046,18 +1118,62 @@
       return;
     }
 
-    const ok = equivalentAnswer(userAnswer, current.answer);
+    const mode = selected("responseMode");
+    const ok = mode === "decimal"
+      ? userAnswer === decimalString(current.answer)
+      : equivalentAnswer(userAnswer, current.answer);
+
     answered = true;
     stats.attempted++;
     if (ok) {
       stats.correct++;
       stats.streak++;
-      showFeedback(true, `Correct. ${pretty(current.answer)} is the exact value.`);
+
+      if (mode === "decimal") {
+        showFeedback(
+          true,
+          `Correct. ${decimalString(current.answer)} is the value rounded to the nearest thousandth.`
+        );
+      } else {
+        showFeedback(true, `Correct. ${pretty(current.answer)} is the exact value.`);
+      }
     } else {
       stats.streak = 0;
-      showFeedback(false, `Not quite. The exact value is ${pretty(current.answer)}.`);
+
+      if (mode === "decimal") {
+        showFeedback(
+          false,
+          `Not quite. The value rounded to the nearest thousandth is ${decimalString(current.answer)}.`
+        );
+      } else {
+        showFeedback(false, `Not quite. The exact value is ${pretty(current.answer)}.`);
+      }
     }
+    $("#nextBtn").textContent = "Next problem";
     updateStats();
+  }
+
+  function handleNextButton() {
+    // If the student has not answered yet, the first click counts as a missed
+    // attempt and reveals the answer. A second click advances.
+    if (!answered) {
+      answered = true;
+      stats.attempted++;
+      stats.streak = 0;
+
+      const mode = selected("responseMode");
+      const reveal = mode === "decimal"
+        ? `Skipped. The value rounded to the nearest thousandth is ${decimalString(current.answer)}.`
+        : `Skipped. The exact value is ${pretty(current.answer)}.`;
+
+      showFeedback(false, reveal);
+
+      $("#nextBtn").textContent = "Next problem";
+      updateStats();
+      return;
+    }
+
+    newProblem();
   }
 
   function showFeedback(good, text) {
@@ -1123,7 +1239,11 @@
       if (Math.cos(rad) > .45) anchor = "start";
       if (Math.cos(rad) < -.45) anchor = "end";
 
-      svg += `<text class="angle-label ${hi ? "highlight" : ""}" x="${lx}" y="${ly+4}" text-anchor="${anchor}">${a.rad}</text>`;
+      // Show both common angle representations on the reference circle.
+      // The radian measure is the primary line; degrees sit directly beneath it.
+      const degreeY = ly + 18;
+      svg += `<text class="angle-label ${hi ? "highlight" : ""}" x="${lx}" y="${ly+2}" text-anchor="${anchor}">${a.rad}</text>`;
+      svg += `<text class="degree-label ${hi ? "highlight" : ""}" x="${lx}" y="${degreeY}" text-anchor="${anchor}">${a.deg}°</text>`;
     });
 
     svg += `<text class="tick-label" x="${cx+r+8}" y="${cy-8}">1</text>
@@ -1166,7 +1286,7 @@
   }));
 
   $("#checkBtn").addEventListener("click", checkAnswer);
-  $("#nextBtn").addEventListener("click", newProblem);
+  $("#nextBtn").addEventListener("click", handleNextButton);
   $("#resetStats").addEventListener("click", () => {
     stats = {correct:0, attempted:0, streak:0};
     updateStats();
